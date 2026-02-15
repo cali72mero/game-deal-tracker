@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Game Deal Tracker | Beste Gaming-Deals finden</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 8px 16px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chip:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .deal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .deal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: var(--primary);
+        }
+
+        .deal-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--bg-hover), var(--bg-dark));
+        }
+
+        .deal-content {
+            padding: 20px;
+        }
+
+        .deal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .deal-prices {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .price-old {
+            text-decoration: line-through;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .price-new {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .savings {
+            background: var(--success);
+            color: var(--bg-dark);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .deal-store {
+            display: inline-block;
+            padding: 5px 12px;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .deal-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--warning);
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.2rem;
+            color: var(--text-dim);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+            font-size: 1.2rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+        }
+
+        .price-history {
+            margin-top: 30px;
+        }
+
+        .price-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--bg-hover);
+            border-radius: 10px;
+            align-items: center;
+        }
+
+        .store-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .store-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .buy-btn {
+            padding: 10px 20px;
+            background: var(--success);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .buy-btn:hover {
+            background: #22c55e;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .deals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Game Deal Tracker</h1>
+            <p class="subtitle">Finde die besten Gaming-Deals auf Steam, Epic, GOG & mehr</p>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Spielname eingeben (z.B. Cyberpunk 2077, GTA 5, Elden Ring)..."
+                >
+                <button class="btn" onclick="searchGame()">🔍 Suchen</button>
+            </div>
+            
+            <div class="filter-chips">
+                <div class="chip active" onclick="loadDeals('all')">🔥 Alle Deals</div>
+                <div class="chip" onclick="loadDeals('steam')">🛻️ Steam</div>
+                <div class="chip" onclick="loadDeals('epic')">🎮 Epic Games</div>
+                <div class="chip" onclick="loadDeals('gog')">🎯 GOG</div>
+                <div class="chip" onclick="loadDeals('aaa')">⭐ AAA-Spiele</div>
+            </div>
+        </div>
+
+        <!-- Trending Deals -->
+        <div class="section-title">🔥 Aktuelle Top-Deals</div>
+        <div id="dealsContainer" class="deals-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Lade aktuelle Deals...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Details Modal -->
+    <div class="modal" id="gameModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://www.cheapshark.com/api/1.0';
+        
+        // Store IDs
+        const STORES = {
+            '1': { name: 'Steam', color: '#1b2838', emoji: '🛻️' },
+            '25': { name: 'Epic Games', color: '#2a2a2a', emoji: '🎮' },
+            '7': { name: 'GOG', color: '#86328a', emoji: '🎯' },
+            '8': { name: 'Origin', color: '#f56c2d', emoji: '🎮' },
+            '11': { name: 'Humble Store', color: '#cc2929', emoji: '🎁' },
+            '2': { name: 'GamersGate', color: '#1e88e5', emoji: '🎮' },
+            '3': { name: 'GreenManGaming', color: '#75b848', emoji: '🌿' }
+        };
+
+        // Load deals on page load
+        window.addEventListener('load', () => {
+            loadDeals('all');
+        });
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchGame();
+        });
+
+        async function loadDeals(filter = 'all') {
+            const container = document.getElementById('dealsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Lade Deals...</p></div>';
+
+            try {
+                let url = `${API_BASE}/deals?pageSize=20&sortBy=Savings`;
+                
+                if (filter === 'steam') url += '&storeID=1';
+                else if (filter === 'epic') url += '&storeID=25';
+                else if (filter === 'gog') url += '&storeID=7';
+                else if (filter === 'aaa') url += '&AAA=1';
+
+                const response = await fetch(url);
+                const deals = await response.json();
+
+                if (deals.length === 0) {
+                    container.innerHTML = '<div class="no-results">😞 Keine Deals gefunden</div>';
+                    return;
+                }
+
+                displayDeals(deals);
+
+                // Update active chip
+                document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+                event.target.classList.add('active');
+            } catch (error) {
+                container.innerHTML = '<div class="error">❌ Fehler beim Laden der Deals. Bitte versuche es später erneut.</div>';
+            }
+        }
+
+        async function searchGame() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (!searchTerm) return;
+
+            const container = document.getElementById('dealsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Suche nach "' + searchTerm + '"...</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/games?title=${encodeURIComponent(searchTerm)}&limit=20`);
+                const games = await response.json();
+
+                if (games.length === 0) {
+                    container.innerHTML = '<div class="no-results">😞 Kein Spiel gefunden für "' + searchTerm + '"</div>';
+                    return;
+                }
+
+                // Get deals for each game
+                const dealsPromises = games.map(game => 
+                    fetch(`${API_BASE}/games?id=${game.gameID}`).then(r => r.json())
+                );
+                const dealsData = await Promise.all(dealsPromises);
+
+                displaySearchResults(games, dealsData);
+            } catch (error) {
+                container.innerHTML = '<div class="error">❌ Fehler bei der Suche. Bitte versuche es erneut.</div>';
+            }
+        }
+
+        function displayDeals(deals) {
+            const container = document.getElementById('dealsContainer');
+            container.innerHTML = '';
+
+            deals.forEach(deal => {
+                const savings = Math.round(deal.savings);
+                const store = STORES[deal.storeID] || { name: 'Store', emoji: '🎮' };
+
+                const card = document.createElement('div');
+                card.className = 'deal-card';
+                card.onclick = () => showGameDetails(deal.gameID, deal.title);
+                
+                card.innerHTML = `
+                    <img src="${deal.thumb}" alt="${deal.title}" class="deal-image">
+                    <div class="deal-content">
+                        <div class="deal-store">${store.emoji} ${store.name}</div>
+                        <div class="deal-title" title="${deal.title}">${deal.title}</div>
+                        <div class="deal-prices">
+                            <div>
+                                <div class="price-old">€${deal.normalPrice}</div>
+                                <div class="price-new">€${deal.salePrice}</div>
+                            </div>
+                            <div class="savings">-${savings}%</div>
+                        </div>
+                        ${deal.steamRatingText ? `
+                            <div class="deal-rating">
+                                ⭐ ${deal.steamRatingText}
+                                <span style="color: var(--text-dim); font-size: 0.8rem;">
+                                    (${deal.steamRatingPercent}%)
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function displaySearchResults(games, dealsData) {
+            const container = document.getElementById('dealsContainer');
+            container.innerHTML = '';
+
+            games.forEach((game, index) => {
+                const gameData = dealsData[index];
+                const deals = gameData.deals || [];
+                
+                if (deals.length === 0) return;
+
+                const bestDeal = deals.reduce((best, deal) => 
+                    parseFloat(deal.price) < parseFloat(best.price) ? deal : best
+                , deals[0]);
+
+                const store = STORES[bestDeal.storeID] || { name: 'Store', emoji: '🎮' };
+                const retailPrice = parseFloat(bestDeal.retailPrice);
+                const salePrice = parseFloat(bestDeal.price);
+                const savings = Math.round(((retailPrice - salePrice) / retailPrice) * 100);
+
+                const card = document.createElement('div');
+                card.className = 'deal-card';
+                card.onclick = () => showGameDetails(game.gameID, game.external);
+                
+                card.innerHTML = `
+                    <img src="${game.thumb}" alt="${game.external}" class="deal-image">
+                    <div class="deal-content">
+                        <div class="deal-store">${store.emoji} ${store.name}</div>
+                        <div class="deal-title" title="${game.external}">${game.external}</div>
+                        <div class="deal-prices">
+                            <div>
+                                <div class="price-old">€${retailPrice.toFixed(2)}</div>
+                                <div class="price-new">€${salePrice.toFixed(2)}</div>
+                            </div>
+                            ${savings > 0 ? `<div class="savings">-${savings}%</div>` : ''}
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim);">
+                            ${deals.length} Store(s) verfügbar
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        async function showGameDetails(gameID, title) {
+            const modal = document.getElementById('gameModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = title;
+            modalBody.innerHTML = '<div class="loading"><div class="spinner"></div><p>Lade Details...</p></div>';
+            modal.classList.add('active');
+
+            try {
+                const response = await fetch(`${API_BASE}/games?id=${gameID}`);
+                const data = await response.json();
+                const deals = data.deals || [];
+
+                if (deals.length === 0) {
+                    modalBody.innerHTML = '<p>Keine Deals verfügbar.</p>';
+                    return;
+                }
+
+                // Sort by price
+                deals.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
+                let html = '<div class="price-list">';
+                
+                deals.forEach(deal => {
+                    const store = STORES[deal.storeID] || { name: 'Store', emoji: '🎮' };
+                    const retailPrice = parseFloat(deal.retailPrice);
+                    const salePrice = parseFloat(deal.price);
+                    const savings = Math.round(((retailPrice - salePrice) / retailPrice) * 100);
+
+                    html += `
+                        <div class="price-item">
+                            <div class="store-info">
+                                <div class="store-logo">${store.emoji}</div>
+                                <div>
+                                    <div style="font-weight: 600;">${store.name}</div>
+                                    <div style="color: var(--text-dim); font-size: 0.85rem;">
+                                        ${savings > 0 ? `-${savings}%` : 'Kein Sale'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.2rem; font-weight: 700; color: var(--success);">
+                                    €${salePrice.toFixed(2)}
+                                </div>
+                                ${retailPrice !== salePrice ? `
+                                    <div style="text-decoration: line-through; color: var(--text-dim); font-size: 0.85rem;">
+                                        €${retailPrice.toFixed(2)}
+                                    </div>
+                                ` : ''}
+                                <a href="https://www.cheapshark.com/redirect?dealID=${deal.dealID}" 
+                                   target="_blank" 
+                                   class="buy-btn" 
+                                   style="margin-top: 8px;">
+                                    🛍️ Kaufen
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+
+                // Add price history info
+                const cheapest = data.cheapestPriceEver;
+                if (cheapest) {
+                    html += `
+                        <div class="price-history">
+                            <h3>📊 Preis-Historie</h3>
+                            <div class="price-item" style="margin-top: 15px;">
+                                <div>
+                                    <div style="font-weight: 600;">🏆 Niedrigster Preis jemals</div>
+                                    <div style="color: var(--text-dim); font-size: 0.85rem;">
+                                        ${new Date(cheapest.date * 1000).toLocaleDateString('de-DE')}
+                                    </div>
+                                </div>
+                                <div style="font-size: 1.3rem; font-weight: 700; color: var(--warning);">
+                                    €${parseFloat(cheapest.price).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                modalBody.innerHTML = html;
+            } catch (error) {
+                modalBody.innerHTML = '<div class="error">❌ Fehler beim Laden der Details</div>';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('gameModal').classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.getElementById('gameModal').addEventListener('click', (e) => {
+            if (e.target.id === 'gameModal') closeModal();
+        });
+    </script>
+</body>
+</html>
