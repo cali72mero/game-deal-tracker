@@ -151,6 +151,14 @@
             border: 2px solid var(--border);
         }
 
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
         .filter-section {
             display: flex;
             gap: 15px;
@@ -216,6 +224,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .section-title {
@@ -330,6 +340,22 @@
 
         .wishlist-btn.active {
             background: var(--danger);
+        }
+
+        .warning-box {
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid var(--warning);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .warning-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
         }
 
         .loading {
@@ -525,6 +551,16 @@
             left: 27px;
         }
 
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 2rem; }
             .deals-grid { grid-template-columns: 1fr; }
@@ -601,9 +637,25 @@
 
         <!-- Wishlist Tab -->
         <div id="wishlistTab" style="display: none;">
+            <div class="warning-box">
+                <div class="warning-icon">⚠️</div>
+                <div>
+                    <strong>Wichtig: Deine Wishlist wird lokal gespeichert!</strong><br>
+                    <span style="font-size: 0.9rem; color: var(--text-dim);">
+                        Wenn du deinen Browser-Cache löschst, wird auch deine Wishlist gelöscht.
+                        Sichere deine Wishlist regelmäßig mit dem Export-Button!
+                    </span>
+                </div>
+            </div>
+
             <div class="section-header">
                 <div class="section-title">❤️ Meine Wishlist</div>
-                <button class="btn" onclick="clearWishlist()">🗑️ Alle löschen</button>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="exportWishlist()">💾 Exportieren</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Importieren</button>
+                    <button class="btn btn-danger" onclick="clearWishlist()">🗑️ Löschen</button>
+                    <input type="file" id="importFile" accept=".json" onchange="importWishlist(event)">
+                </div>
             </div>
             <div id="wishlistContainer" class="deals-grid">
                 <div class="no-results">❤️ Wishlist ist leer. Füge Spiele hinzu!</div>
@@ -612,6 +664,17 @@
 
         <!-- Settings Tab -->
         <div id="settingsTab" style="display: none;">
+            <div class="warning-box">
+                <div class="warning-icon">💡</div>
+                <div>
+                    <strong>Hinweis: Alle Daten werden lokal gespeichert</strong><br>
+                    <span style="font-size: 0.9rem; color: var(--text-dim);">
+                        Deine Einstellungen, Wishlist und Statistiken werden im Browser-LocalStorage gespeichert.
+                        Beim Löschen des Browser-Cache werden diese Daten entfernt!
+                    </span>
+                </div>
+            </div>
+
             <div class="section-title">⚙️ Einstellungen</div>
             <div class="settings-grid">
                 <div class="setting-item">
@@ -650,11 +713,23 @@
                     <div>Gespeicherte Wishlist-Spiele: <strong id="statsWishlist">0</strong></div>
                     <div>Geladene Deals heute: <strong id="statsDealsLoaded">0</strong></div>
                     <div>Durchschnittliche Ersparnis: <strong id="statsAvgSavings">0%</strong></div>
+                    <div>Letzte Wishlist-Sicherung: <strong id="lastBackup">Noch nie</strong></div>
                 </div>
             </div>
 
+            <div style="margin-top: 30px; padding: 20px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border);">
+                <h3 style="margin-bottom: 15px;">🐞 Daten-Management</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ Alle Daten löschen</button>
+                    <button class="btn btn-secondary" onclick="exportAllData()">💾 Alles exportieren</button>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.85rem; color: var(--text-dim);">
+                    Exportiere regelmäßig deine Daten als Backup!
+                </p>
+            </div>
+
             <div style="margin-top: 20px; text-align: center; color: var(--text-dim); font-size: 0.9rem;">
-                🛠️ Ultimate Game Deal Tracker v1.0 | Made with ❤️ by cali72mero
+                🛠️ Ultimate Game Deal Tracker v1.1 | Made with ❤️ by cali72mero
             </div>
         </div>
     </div>
@@ -691,6 +766,7 @@
             loadDeals();
             updateWishlistCount();
             loadSettings();
+            updateLastBackup();
         });
 
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
@@ -898,6 +974,115 @@
                 localStorage.setItem('wishlist', JSON.stringify(wishlist));
                 updateWishlistCount();
                 displayWishlist();
+            }
+        }
+
+        function exportWishlist() {
+            if (wishlist.length === 0) {
+                alert('⚠️ Wishlist ist leer!');
+                return;
+            }
+
+            const data = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                wishlist: wishlist
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `game-deal-tracker-wishlist-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            // Update last backup time
+            stats.lastBackup = new Date().toISOString();
+            localStorage.setItem('stats', JSON.stringify(stats));
+            updateLastBackup();
+
+            alert('✅ Wishlist erfolgreich exportiert!');
+        }
+
+        function importWishlist(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.wishlist || !Array.isArray(data.wishlist)) {
+                        throw new Error('Invalid format');
+                    }
+
+                    if (confirm(`Willst du ${data.wishlist.length} Spiele importieren? Deine aktuelle Wishlist wird überschrieben!`)) {
+                        wishlist = data.wishlist;
+                        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                        updateWishlistCount();
+                        displayWishlist();
+                        alert('✅ Wishlist erfolgreich importiert!');
+                    }
+                } catch (error) {
+                    alert('❌ Fehler beim Importieren! Ungültige Datei.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function exportAllData() {
+            const data = {
+                version: '1.1',
+                exportDate: new Date().toISOString(),
+                wishlist: wishlist,
+                settings: settings,
+                stats: stats
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `game-deal-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            stats.lastBackup = new Date().toISOString();
+            localStorage.setItem('stats', JSON.stringify(stats));
+            updateLastBackup();
+
+            alert('✅ Alle Daten erfolgreich exportiert!');
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ Willst du ALLE Daten (Wishlist, Einstellungen, Statistiken) unwiderruflich löschen?')) {
+                if (confirm('⚠️ Bist du SICHER? Diese Aktion kann nicht rückgängig gemacht werden!')) {
+                    localStorage.removeItem('wishlist');
+                    localStorage.removeItem('settings');
+                    localStorage.removeItem('stats');
+                    wishlist = [];
+                    settings = {};
+                    stats = { dealsLoaded: 0 };
+                    updateWishlistCount();
+                    loadSettings();
+                    updateLastBackup();
+                    alert('✅ Alle Daten gelöscht!');
+                    location.reload();
+                }
+            }
+        }
+
+        function updateLastBackup() {
+            const lastBackup = stats.lastBackup;
+            const element = document.getElementById('lastBackup');
+            if (lastBackup) {
+                const date = new Date(lastBackup);
+                element.textContent = date.toLocaleDateString('de-DE') + ' ' + date.toLocaleTimeString('de-DE');
+            } else {
+                element.textContent = 'Noch nie';
             }
         }
 
