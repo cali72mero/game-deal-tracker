@@ -602,9 +602,9 @@
                     </div>
                     <div class="filter-group">
                         <span class="filter-label">Rabatt:</span>
-                        <div class="chip" onclick="filterBySavings(50)">50%+</div>
-                        <div class="chip" onclick="filterBySavings(75)">75%+</div>
-                        <div class="chip" onclick="filterBySavings(90)">90%+</div>
+                        <div class="chip" onclick="filterBySavings(50)">💸 50%+</div>
+                        <div class="chip" onclick="filterBySavings(75)">🔥 75%+</div>
+                        <div class="chip" onclick="filterBySavings(90)">⭐ 90%+</div>
                     </div>
                 </div>
             </div>
@@ -652,9 +652,9 @@
                 <div class="section-title">❤️ Meine Wishlist</div>
                 <div class="button-group">
                     <button class="btn btn-success" onclick="exportWishlist()">💾 Exportieren</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Importieren</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importWishlistFile').click()">📂 Importieren</button>
                     <button class="btn btn-danger" onclick="clearWishlist()">🗑️ Löschen</button>
-                    <input type="file" id="importFile" accept=".json" onchange="importWishlist(event)">
+                    <input type="file" id="importWishlistFile" accept=".json" onchange="importWishlist(event)">
                 </div>
             </div>
             <div id="wishlistContainer" class="deals-grid">
@@ -713,23 +713,25 @@
                     <div>Gespeicherte Wishlist-Spiele: <strong id="statsWishlist">0</strong></div>
                     <div>Geladene Deals heute: <strong id="statsDealsLoaded">0</strong></div>
                     <div>Durchschnittliche Ersparnis: <strong id="statsAvgSavings">0%</strong></div>
-                    <div>Letzte Wishlist-Sicherung: <strong id="lastBackup">Noch nie</strong></div>
+                    <div>Letzte Sicherung: <strong id="lastBackup">Noch nie</strong></div>
                 </div>
             </div>
 
             <div style="margin-top: 30px; padding: 20px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border);">
                 <h3 style="margin-bottom: 15px;">🐞 Daten-Management</h3>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="exportAllData()">💾 Alles exportieren</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importAllFile').click()">📂 Alles importieren</button>
                     <button class="btn btn-danger" onclick="clearAllData()">🗑️ Alle Daten löschen</button>
-                    <button class="btn btn-secondary" onclick="exportAllData()">💾 Alles exportieren</button>
+                    <input type="file" id="importAllFile" accept=".json" onchange="importAllData(event)">
                 </div>
                 <p style="margin-top: 15px; font-size: 0.85rem; color: var(--text-dim);">
-                    Exportiere regelmäßig deine Daten als Backup!
+                    💡 Exportiere regelmäßig deine Daten als Backup! Nach dem Export kannst du die JSON-Datei jederzeit wieder hochladen.
                 </p>
             </div>
 
             <div style="margin-top: 20px; text-align: center; color: var(--text-dim); font-size: 0.9rem;">
-                🛠️ Ultimate Game Deal Tracker v1.1 | Made with ❤️ by cali72mero
+                🛠️ Ultimate Game Deal Tracker v1.2 | Made with ❤️ by cali72mero
             </div>
         </div>
     </div>
@@ -831,6 +833,11 @@
         function displayDeals(deals) {
             const container = document.getElementById('dealsContainer');
             container.innerHTML = '';
+
+            if (deals.length === 0) {
+                container.innerHTML = '<div class="no-results">😞 Keine Deals gefunden</div>';
+                return;
+            }
 
             deals.forEach(deal => {
                 const savings = Math.round(deal.savings);
@@ -984,7 +991,8 @@
             }
 
             const data = {
-                version: '1.0',
+                type: 'wishlist',
+                version: '1.2',
                 exportDate: new Date().toISOString(),
                 wishlist: wishlist
             };
@@ -997,7 +1005,6 @@
             a.click();
             URL.revokeObjectURL(url);
 
-            // Update last backup time
             stats.lastBackup = new Date().toISOString();
             localStorage.setItem('stats', JSON.stringify(stats));
             updateLastBackup();
@@ -1035,7 +1042,8 @@
 
         function exportAllData() {
             const data = {
-                version: '1.1',
+                type: 'full_backup',
+                version: '1.2',
                 exportDate: new Date().toISOString(),
                 wishlist: wishlist,
                 settings: settings,
@@ -1055,6 +1063,63 @@
             updateLastBackup();
 
             alert('✅ Alle Daten erfolgreich exportiert!');
+        }
+
+        function importAllData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.type || (data.type !== 'full_backup' && data.type !== 'wishlist')) {
+                        throw new Error('Invalid format');
+                    }
+
+                    let confirmMsg = '';
+                    if (data.type === 'full_backup') {
+                        confirmMsg = `Willst du das komplette Backup importieren?\n\n` +
+                                   `- Wishlist: ${data.wishlist?.length || 0} Spiele\n` +
+                                   `- Einstellungen: ${Object.keys(data.settings || {}).length} Optionen\n\n` +
+                                   `ALLE aktuellen Daten werden überschrieben!`;
+                    } else {
+                        confirmMsg = `Willst du ${data.wishlist?.length || 0} Spiele importieren?\n\nDeine aktuelle Wishlist wird überschrieben!`;
+                    }
+
+                    if (confirm(confirmMsg)) {
+                        if (data.wishlist) {
+                            wishlist = data.wishlist;
+                            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                        }
+                        if (data.settings) {
+                            settings = data.settings;
+                            localStorage.setItem('settings', JSON.stringify(settings));
+                        }
+                        if (data.stats) {
+                            stats = data.stats;
+                            localStorage.setItem('stats', JSON.stringify(stats));
+                        }
+                        
+                        updateWishlistCount();
+                        loadSettings();
+                        updateLastBackup();
+                        
+                        if (document.getElementById('wishlistTab').style.display !== 'none') {
+                            displayWishlist();
+                        }
+                        
+                        alert('✅ Daten erfolgreich importiert! Seite wird neu geladen...');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                } catch (error) {
+                    alert('❌ Fehler beim Importieren! Ungültige Datei.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         }
 
         function clearAllData() {
@@ -1112,8 +1177,20 @@
         }
 
         function filterBySavings(minSavings) {
+            if (!currentDeals || currentDeals.length === 0) {
+                alert('⚠️ Bitte lade zuerst die Deals!');
+                return;
+            }
+            
             const filtered = currentDeals.filter(d => parseFloat(d.savings) >= minSavings);
-            displayDeals(filtered);
+            
+            if (filtered.length === 0) {
+                document.getElementById('dealsContainer').innerHTML = 
+                    `<div class="no-results">😞 Keine Deals mit ${minSavings}%+ Rabatt gefunden</div>`;
+            } else {
+                displayDeals(filtered);
+                alert(`✅ ${filtered.length} Deals mit ${minSavings}%+ Rabatt gefunden!`);
+            }
         }
 
         function switchTab(tab) {
